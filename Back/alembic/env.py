@@ -10,6 +10,7 @@ from db.session import Base
 # add your model's MetaData object here
 from models.user import User
 from models.assessent import Test, Question, Answer
+from models.token import Token
 
 import os
 from dotenv import load_dotenv

@@ -14,6 +14,9 @@ class UserSex(str, Enum):
 class UserBase(BaseModel):
     email: EmailStr
 
+class UserLogin(UserBase):
+    password: str
+
 class UserCreate(UserBase):
     name: str
     age: int

@@ -30,3 +30,4 @@ class User(Base):
     # ✅ Fix — lazy string evaluated later, after all models are loaded
     test_as_evaluator = relationship("Test", back_populates="evaluator", foreign_keys="Test.evaluator_id")
     test_as_pupil = relationship("Test", back_populates="pupil", foreign_keys="Test.pupil_id")
+    tokens = relationship("Token", back_populates="user", cascade="all, delete-orphan")
