@@ -9,7 +9,7 @@ from alembic import context
 from db.session import Base
 # add your model's MetaData object here
 from models.user import User
-from models.assessent import Test, Question, Answer
+from models.assessent import Test, Question, Answer, Result, StudentAnswer
 from models.token import Token
 
 import os
