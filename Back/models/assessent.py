@@ -21,7 +21,7 @@ class Test(Base):
     description = Column(String, nullable=True)
     is_published = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     evaluator = relationship("User", foreign_keys=[evaluator_id], back_populates="test_as_evaluator")
     questions = relationship("Question", back_populates="test", cascade="all, delete-orphan")
@@ -37,7 +37,7 @@ class Question(Base):
     question_text = Column(String, nullable=False)
     question_number = Column(Integer, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
     test = relationship("Test", back_populates="questions")
     answers = relationship("Answer", back_populates="question", cascade="all, delete-orphan")  # ← cascade
 
@@ -51,7 +51,7 @@ class Answer(Base):
     answer_text = Column(String, nullable=False)
     is_correct = Column(Boolean, nullable=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())
 
     question = relationship("Question", back_populates="answers")
 

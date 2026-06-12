@@ -105,7 +105,7 @@ async def upload_pdf_and_extract(
     current_user: User = Depends(_require_evaluator),
     db: Session = Depends(get_db)
 ):
-    """Upload PDF and extract questions using OpenAI"""
+    """Upload PDF and extract questions using Gemini"""
     test = db.query(Test).filter(Test.id == test_id).first()
     if not test:
         raise HTTPException(status_code=404, detail="Test not found")
@@ -122,7 +122,7 @@ async def upload_pdf_and_extract(
     if not content:
         raise HTTPException(status_code=400, detail="Empty file")
 
-    # Extract questions using OpenAI
+    # Extract questions using Gemini
     try:
         extracted_questions = extract_questions_from_pdf(content, past_exam=past_exam)
     except Exception as e:
@@ -230,7 +230,7 @@ def get_test_results(
 
 @router.get("/available", response_model=List[TestRead])
 def get_available_tests(
-    current_user: User = Depends(_require_pupil),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get list of published tests available for students"""
@@ -241,7 +241,7 @@ def get_available_tests(
 @router.get("/{test_id}/questions", response_model=TestReadWithQuestions)
 def get_test_questions(
     test_id: UUID,
-    current_user: User = Depends(_require_pupil),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
     """Get test questions (without revealing correct answers)"""

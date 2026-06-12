@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
-    OPENAI_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
 
     class Config:
         env_file = ".env"

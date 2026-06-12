@@ -1,21 +1,21 @@
 import json
 from typing import List, Dict
-from openai import OpenAI
+from google import genai
 from core.setting import settings
 import PyPDF2
 from io import BytesIO
 
 
 def _get_client():
-    """Get OpenAI client, raise error if API key not configured"""
-    if not settings.OPENAI_API_KEY:
-        raise ValueError("OPENAI_API_KEY not configured in environment")
-    return OpenAI(api_key=settings.OPENAI_API_KEY)
+    """Initialize Gemini client, raise error if API key not configured"""
+    if not settings.GEMINI_API_KEY:
+        raise ValueError("GEMINI_API_KEY not configured in environment")
+    return genai.Client(api_key=settings.GEMINI_API_KEY)
 
 
 def extract_questions_from_pdf(pdf_content: bytes, past_exam: bool = False) -> List[Dict]:
     """
-    Extract questions and answers from PDF using OpenAI.
+    Extract questions and answers from PDF using Google Gemini.
 
     Args:
         pdf_content: Binary content of the PDF file
@@ -74,26 +74,21 @@ Return a JSON array with this structure:
 
 Return ONLY valid JSON, no markdown formatting."""
 
-    # Call OpenAI API
+    # Call Gemini API
     client = _get_client()
-    response = client.chat.completions.create(
-        model="gpt-4o",
-        messages=[
-            {"role": "system", "content": "You are an expert at extracting and creating exam questions."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.7,
-        max_tokens=4000
+    response = client.models.generate_content(
+        model="gemini-1.5-flash",
+        contents=prompt
     )
-
-    # Parse response
-    response_text = response.choices[0].message.content.strip()
+    response_text = response.text.strip()
 
     # Handle markdown code blocks if present
     if response_text.startswith("```"):
         response_text = response_text.split("```")[1]
         if response_text.startswith("json"):
             response_text = response_text[4:]
+    if response_text.endswith("```"):
+        response_text = response_text[:-3]
 
     questions_data = json.loads(response_text)
 
