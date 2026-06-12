@@ -1,16 +1,21 @@
 import json
 from typing import List, Dict
-from google import genai
+import google.generativeai as genai
 from core.setting import settings
 import PyPDF2
 from io import BytesIO
+import warnings
+
+# Suppress deprecation warning
+warnings.filterwarnings("ignore", category=FutureWarning, module="google.generativeai")
 
 
 def _get_client():
     """Initialize Gemini client, raise error if API key not configured"""
     if not settings.GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY not configured in environment")
-    return genai.Client(api_key=settings.GEMINI_API_KEY)
+    genai.configure(api_key=settings.GEMINI_API_KEY)
+    return genai.GenerativeModel("gemini-1.5-flash")
 
 
 def extract_questions_from_pdf(pdf_content: bytes, past_exam: bool = False) -> List[Dict]:
@@ -75,11 +80,8 @@ Return a JSON array with this structure:
 Return ONLY valid JSON, no markdown formatting."""
 
     # Call Gemini API
-    client = _get_client()
-    response = client.models.generate_content(
-        model="gemini-1.5-flash",
-        contents=prompt
-    )
+    model = _get_client()
+    response = model.generate_content(prompt)
     response_text = response.text.strip()
 
     # Handle markdown code blocks if present
