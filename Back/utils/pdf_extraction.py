@@ -15,7 +15,7 @@ def _get_client():
     if not settings.GEMINI_API_KEY:
         raise ValueError("GEMINI_API_KEY not configured in environment")
     genai.configure(api_key=settings.GEMINI_API_KEY)
-    return genai.GenerativeModel("gemini-1.5-flash")
+    return genai.GenerativeModel("gemini-2.5-flash")
 
 
 def extract_questions_from_pdf(pdf_content: bytes, past_exam: bool = False) -> List[Dict]:
