@@ -1,8 +1,8 @@
-"""made the sex an enum
+"""deploy 3
 
-Revision ID: 9b7dc006e1e3
+Revision ID: db318d3e3292
 Revises: 
-Create Date: 2026-06-09 07:03:31.704470
+Create Date: 2026-06-13 08:27:00.301949
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '9b7dc006e1e3'
+revision: str = 'db318d3e3292'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,10 +25,10 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('age', sa.Integer(), nullable=False),
-    sa.Column('sex', sa.Enum('MALE', 'FEMALE', name='usersex'), nullable=False),
+    sa.Column('sex', sa.Enum('male', 'female', name='usersex'), nullable=False),
+    sa.Column('role', sa.Enum('evaluator', 'pupil', name='userrole'), nullable=False),
     sa.Column('email', sa.String(), nullable=False),
     sa.Column('hs_password', sa.String(), nullable=False),
-    sa.Column('role', sa.Enum('EVALUATOR', 'PUPIL', name='userrole'), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id')
@@ -39,26 +39,51 @@ def upgrade() -> None:
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('name', sa.String(), nullable=False),
     sa.Column('evaluator_id', sa.UUID(), nullable=False),
-    sa.Column('pupil_id', sa.UUID(), nullable=False),
     sa.Column('description', sa.String(), nullable=True),
+    sa.Column('is_published', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['evaluator_id'], ['users.id'], ),
-    sa.ForeignKeyConstraint(['pupil_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_tests_id'), 'tests', ['id'], unique=False)
+    op.create_table('tokens',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('token', sa.String(), nullable=False),
+    sa.Column('user_id', sa.UUID(), nullable=False),
+    sa.Column('is_active', sa.Boolean(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('token')
+    )
+    op.create_index(op.f('ix_tokens_id'), 'tokens', ['id'], unique=False)
     op.create_table('questions',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('test_id', sa.UUID(), nullable=False),
-    sa.Column('question_type', sa.Enum('MULTIPLE_CHOICE', 'TRUE_FALSE', 'SHORT_ANSWER', name='questiontype'), nullable=False),
+    sa.Column('question_type', sa.Enum('multiple_choice', 'true_false', 'short_answer', name='questiontype'), nullable=False),
     sa.Column('question_text', sa.String(), nullable=False),
     sa.Column('question_number', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['test_id'], ['tests.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_questions_id'), 'questions', ['id'], unique=False)
+    op.create_table('results',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('test_id', sa.UUID(), nullable=False),
+    sa.Column('pupil_id', sa.UUID(), nullable=False),
+    sa.Column('score', sa.Integer(), nullable=False),
+    sa.Column('total_questions', sa.Integer(), nullable=False),
+    sa.Column('submitted_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.ForeignKeyConstraint(['pupil_id'], ['users.id'], ),
+    sa.ForeignKeyConstraint(['test_id'], ['tests.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_results_id'), 'results', ['id'], unique=False)
     op.create_table('answers',
     sa.Column('id', sa.UUID(), nullable=False),
     sa.Column('question_id', sa.UUID(), nullable=False),
@@ -66,21 +91,41 @@ def upgrade() -> None:
     sa.Column('answer_text', sa.String(), nullable=False),
     sa.Column('is_correct', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
-    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
     sa.ForeignKeyConstraint(['question_id'], ['questions.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_answers_id'), 'answers', ['id'], unique=False)
+    op.create_table('student_answers',
+    sa.Column('id', sa.UUID(), nullable=False),
+    sa.Column('result_id', sa.UUID(), nullable=False),
+    sa.Column('question_id', sa.UUID(), nullable=False),
+    sa.Column('selected_answer_id', sa.UUID(), nullable=True),
+    sa.Column('answer_text', sa.String(), nullable=True),
+    sa.Column('is_correct', sa.Boolean(), nullable=False),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.ForeignKeyConstraint(['question_id'], ['questions.id'], ),
+    sa.ForeignKeyConstraint(['result_id'], ['results.id'], ),
+    sa.ForeignKeyConstraint(['selected_answer_id'], ['answers.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
+    op.create_index(op.f('ix_student_answers_id'), 'student_answers', ['id'], unique=False)
     # ### end Alembic commands ###
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # ### commands auto generated by Alembic - please adjust! ###
+    op.drop_index(op.f('ix_student_answers_id'), table_name='student_answers')
+    op.drop_table('student_answers')
     op.drop_index(op.f('ix_answers_id'), table_name='answers')
     op.drop_table('answers')
+    op.drop_index(op.f('ix_results_id'), table_name='results')
+    op.drop_table('results')
     op.drop_index(op.f('ix_questions_id'), table_name='questions')
     op.drop_table('questions')
+    op.drop_index(op.f('ix_tokens_id'), table_name='tokens')
+    op.drop_table('tokens')
     op.drop_index(op.f('ix_tests_id'), table_name='tests')
     op.drop_table('tests')
     op.drop_index(op.f('ix_users_id'), table_name='users')
