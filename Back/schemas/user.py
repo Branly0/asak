@@ -28,6 +28,7 @@ class UserRead(UserBase):
     id: UUID
     name: str
     age: int
+    role: UserRole
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

@@ -422,3 +422,21 @@ def get_result_detail(
         result_data.student_answers.append(answer_read)
 
     return result_data
+
+
+@router.get("/", response_model=List[TestRead])
+def search_tests(
+    name: str = None,
+    evaluator_id: UUID = None,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Search tests by name or evaluator"""
+    query = db.query(Test).filter(Test.evaluator_id == current_user.id)
+
+    if name:
+        query = query.filter(Test.name.ilike(f"%{name}%"))
+    if evaluator_id:
+        query = query.filter(Test.evaluator_id == current_user.id)
+
+    return query.all()

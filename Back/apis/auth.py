@@ -76,3 +76,7 @@ def logout_user(current_user: User = Depends(get_current_user), db: Session = De
         db.add(token)
     db.commit()
     return {"message": "Successfully logged out"}
+
+@router.get("/me", response_model=UserRead)
+def get_current_user_info(current_user: User = Depends(get_current_user)):
+    return current_user
